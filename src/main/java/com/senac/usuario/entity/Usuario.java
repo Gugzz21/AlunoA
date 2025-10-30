@@ -19,19 +19,6 @@ public class Usuario {
     private String cpf;
     @Column(name = "usuario_status")
     private Integer status;
-
-    @OneToMany(mappedBy = "usuario")
-    private Set<Pedido> pedidos;
-
-
-    public Set<Pedido> getPedidos() {
-        return pedidos;
-    }
-
-    public void setPedidos(Set<Pedido> pedidos) {
-        this.pedidos = pedidos;
-    }
-
     public Integer getId() {
         return id;
     }

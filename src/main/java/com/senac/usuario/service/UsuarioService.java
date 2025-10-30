@@ -1,9 +1,10 @@
 package com.senac.usuario.service;
 
+import com.senac.usuario.dto.PedidoDto;
 import com.senac.usuario.dto.UsuarioRequest;
 import com.senac.usuario.dto.UsuarioResponse;
 import com.senac.usuario.entity.Usuario;
-import com.senac.usuario.repository.ObterPedidosPorUsuario;
+import com.senac.usuario.repository.PedidoFeignClient;
 import com.senac.usuario.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,16 +16,20 @@ import java.util.List;
 public class UsuarioService {
 
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private ObterPedidosPorUsuario obterPedidos;
+    private final PedidoFeignClient pedidoFeignClient;
+
+    public UsuarioService(UsuarioRepository usuarioRepository, PedidoFeignClient pedidoFeignClient){
+        this.usuarioRepository = usuarioRepository;
+        this.pedidoFeignClient = pedidoFeignClient;
+    }
+
+
 
     public List<Usuario> listarTodos(){
         return usuarioRepository.findAll();
     }
-
 
     public UsuarioResponse criarUsuario(UsuarioRequest usuarioRequest){
 
@@ -40,14 +45,13 @@ public class UsuarioService {
         usuarioSalvo.setCpf(usuarioTemp.getCpf());
         usuarioSalvo.setNome(usuarioTemp.getNome());
         usuarioSalvo.setStatus(usuarioTemp.getStatus());
-        usuarioSalvo.setPedidos(usuarioTemp.getPedidos());
 
 
         return usuarioResponse;
     }
 
-    public ResponseEntity<Usuario> listarPorId(Integer id){
-        return obterPedidos.encontrarPodID(id);
+    public ResponseEntity<PedidoDto> listarPorId(Integer id){
+        return pedidoFeignClient.encontrarPodID(id);
     }
 
 }

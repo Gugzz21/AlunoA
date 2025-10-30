@@ -22,7 +22,7 @@ public class UsuarioController {
     @GetMapping("/listar/{id}")
     @CrossOrigin(origins = "*")
     public ResponseEntity<Usuario> listarPorId(@PathVariable("id") Integer id){
-        return ResponseEntity.ok(usuarioService.listarPorId(id).getBody());
+        return ResponseEntity.ok(usuarioService.listarPorId(id).getBody().getUsuario());
     }
 
     @PostMapping("/cadastrarUsuario")
