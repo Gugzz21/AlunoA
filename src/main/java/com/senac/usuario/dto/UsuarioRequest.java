@@ -1,6 +1,6 @@
 package com.senac.usuario.dto;
 
-import com.senac.usuario.entity.Pedido;
+
 
 import java.util.Set;
 

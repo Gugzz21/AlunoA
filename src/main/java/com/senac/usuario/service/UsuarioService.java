@@ -1,23 +1,25 @@
 package com.senac.usuario.service;
 
 import com.senac.usuario.dto.PedidoDto;
+import com.senac.usuario.dto.UsuarioComPedidosDto; // Importado o novo DTO
 import com.senac.usuario.dto.UsuarioRequest;
 import com.senac.usuario.dto.UsuarioResponse;
 import com.senac.usuario.entity.Usuario;
 import com.senac.usuario.repository.PedidoFeignClient;
 import com.senac.usuario.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 public class UsuarioService {
 
-
     private final UsuarioRepository usuarioRepository;
-
     private final PedidoFeignClient pedidoFeignClient;
 
     public UsuarioService(UsuarioRepository usuarioRepository, PedidoFeignClient pedidoFeignClient){
@@ -26,13 +28,52 @@ public class UsuarioService {
     }
 
 
+    public List<UsuarioComPedidosDto> listarUsuariosComPedidos() {
 
-    public List<Usuario> listarTodos(){
-        return usuarioRepository.findAll();
+        List<Usuario> usuarios = usuarioRepository.findAll();
+
+
+        return usuarios.stream()
+                .map(this::montarUsuarioComPedidos)
+                .collect(Collectors.toList());
     }
 
-    public UsuarioResponse criarUsuario(UsuarioRequest usuarioRequest){
 
+    private UsuarioComPedidosDto montarUsuarioComPedidos(Usuario usuario) {
+        UsuarioComPedidosDto dto = new UsuarioComPedidosDto();
+        dto.setId(usuario.getId());
+        dto.setNome(usuario.getNome());
+        dto.setCpf(usuario.getCpf());
+        dto.setStatus(usuario.getStatus());
+
+        try {
+
+            ResponseEntity<List<PedidoDto>> response = pedidoFeignClient.buscarPedidosPorUsuario(usuario.getId());
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                dto.setPedidos(response.getBody());
+            } else {
+                dto.setPedidos(List.of());
+
+            }
+        } catch (Exception e) {
+
+            dto.setPedidos(List.of());
+
+        }
+
+        return dto;
+    }
+
+
+    public Usuario listarPorId(Integer id){
+
+        return usuarioRepository.findById(id).orElseThrow(
+                () -> new RuntimeException("Usuário não encontrado: " + id)
+        );
+    }
+
+
+    public UsuarioResponse criarUsuario(UsuarioRequest usuarioRequest){
         Usuario usuarioSalvo = new Usuario();
 
         usuarioSalvo.setCpf(usuarioRequest.getCpf());
@@ -40,18 +81,51 @@ public class UsuarioService {
         usuarioSalvo.setStatus(usuarioRequest.getStatus());
 
         Usuario usuarioTemp = usuarioRepository.save(usuarioSalvo);
+
         UsuarioResponse usuarioResponse = new UsuarioResponse();
-
-        usuarioSalvo.setCpf(usuarioTemp.getCpf());
-        usuarioSalvo.setNome(usuarioTemp.getNome());
-        usuarioSalvo.setStatus(usuarioTemp.getStatus());
-
+        usuarioResponse.setId(usuarioTemp.getId());
+        usuarioResponse.setCpf(usuarioTemp.getCpf());
+        usuarioResponse.setNome(usuarioTemp.getNome());
+        usuarioResponse.setStatus(usuarioTemp.getStatus());
 
         return usuarioResponse;
     }
 
-    public ResponseEntity<PedidoDto> listarPorId(Integer id){
-        return pedidoFeignClient.encontrarPodID(id);
+    public List<Usuario> listarTodos(){
+        return usuarioRepository.findAll();
     }
 
+    public UsuarioComPedidosDto buscarUsuarioComPedidos(Integer id) {
+
+        // 1. Busca o usuário no banco de dados local (obrigatório)
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Usuário não encontrado com ID: " + id));
+
+        List<PedidoDto> pedidos = Collections.emptyList();
+
+        // 2. Chama o microsserviço de Pedidos (Pode falhar, então usamos try-catch)
+        try {
+            // Chama a interface Feign para obter a lista de PedidoDto
+            ResponseEntity<List<PedidoDto>> response = pedidoFeignClient.buscarPedidosPorUsuario(id);
+
+            // Verifica se a resposta foi bem-sucedida e contém um corpo
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                pedidos = response.getBody();
+            }
+        } catch (Exception e) {
+            // Se houver qualquer erro de comunicação (conexão, timeout, etc.),
+            // a lista de pedidos permanece vazia e a exceção é logada/tratada.
+            System.err.println("Falha ao comunicar com o serviço de pedidos para o usuário " + id + ": " + e.getMessage());
+        }
+
+        // 3. Mapeia os dados para o DTO final
+        UsuarioComPedidosDto dto = new UsuarioComPedidosDto();
+        dto.setId(usuario.getId());
+        dto.setNome(usuario.getNome());
+        dto.setCpf(usuario.getCpf());
+        dto.setStatus(usuario.getStatus());
+        dto.setPedidos(pedidos);
+
+        return dto;
+    }
 }

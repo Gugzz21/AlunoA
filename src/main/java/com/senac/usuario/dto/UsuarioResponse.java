@@ -1,6 +1,6 @@
 package com.senac.usuario.dto;
 
-import com.senac.usuario.entity.Pedido;
+
 import jakarta.persistence.*;
 
 import java.util.Set;
@@ -15,7 +15,7 @@ public class UsuarioResponse {
 
     private Integer status;
 
-    private Pedido pedidos;
+
 
     public Integer getId() {
         return id;
@@ -49,11 +49,5 @@ public class UsuarioResponse {
         this.status = status;
     }
 
-    public Pedido getPedidos() {
-        return pedidos;
-    }
 
-    public void setPedidos(Pedido pedidos) {
-        this.pedidos = pedidos;
-    }
 }
