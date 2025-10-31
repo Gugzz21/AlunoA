@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -29,15 +30,11 @@ public class UsuarioService {
 
 
     public List<UsuarioComPedidosDto> listarUsuariosComPedidos() {
-
         List<Usuario> usuarios = usuarioRepository.findAll();
-
-
         return usuarios.stream()
                 .map(this::montarUsuarioComPedidos)
                 .collect(Collectors.toList());
     }
-
 
     private UsuarioComPedidosDto montarUsuarioComPedidos(Usuario usuario) {
         UsuarioComPedidosDto dto = new UsuarioComPedidosDto();
@@ -47,18 +44,14 @@ public class UsuarioService {
         dto.setStatus(usuario.getStatus());
 
         try {
-
             ResponseEntity<List<PedidoDto>> response = pedidoFeignClient.buscarPedidosPorUsuario(usuario.getId());
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            if (response.getStatusCode() == HttpStatus.OK) {
                 dto.setPedidos(response.getBody());
             } else {
                 dto.setPedidos(List.of());
-
             }
         } catch (Exception e) {
-
             dto.setPedidos(List.of());
-
         }
 
         return dto;
@@ -71,8 +64,6 @@ public class UsuarioService {
                 () -> new RuntimeException("Usuário não encontrado: " + id)
         );
     }
-
-
     public UsuarioResponse criarUsuario(UsuarioRequest usuarioRequest){
         Usuario usuarioSalvo = new Usuario();
 
@@ -90,21 +81,16 @@ public class UsuarioService {
 
         return usuarioResponse;
     }
-
     public List<Usuario> listarTodos(){
         return usuarioRepository.findAll();
     }
-
     public UsuarioComPedidosDto buscarUsuarioComPedidos(Integer id) {
-
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Usuário não encontrado com ID: " + id));
-
-        List<PedidoDto> pedidos = Collections.emptyList();
+        List<PedidoDto> pedidos = new ArrayList<>();
 
         try {
             ResponseEntity<List<PedidoDto>> response = pedidoFeignClient.buscarPedidosPorUsuario(id);
-
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 pedidos = response.getBody();
             }
@@ -118,7 +104,6 @@ public class UsuarioService {
         dto.setCpf(usuario.getCpf());
         dto.setStatus(usuario.getStatus());
         dto.setPedidos(pedidos);
-
         return dto;
     }
 }

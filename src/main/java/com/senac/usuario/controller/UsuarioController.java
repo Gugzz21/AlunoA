@@ -41,7 +41,7 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.criarUsuario(usuarioRequest));
     }
 
-    @GetMapping("/{id}/pedidos")
+    @GetMapping("/pedidos/{id}")
     public ResponseEntity<?> listarUsuarioComPedidos(@PathVariable Integer id) {
         try {
             UsuarioComPedidosDto usuario = usuarioService.buscarUsuarioComPedidos(id);

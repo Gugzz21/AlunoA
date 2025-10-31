@@ -13,7 +13,6 @@ public class PedidoDto {
 
     private Integer status;
 
-    private Usuario usuario;
 
     public Integer getId() {
         return id;
@@ -47,11 +46,4 @@ public class PedidoDto {
         this.status = status;
     }
 
-    public Usuario getUsuario() {
-        return usuario;
-    }
-
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
 }
