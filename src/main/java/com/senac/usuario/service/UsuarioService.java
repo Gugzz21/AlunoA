@@ -97,28 +97,21 @@ public class UsuarioService {
 
     public UsuarioComPedidosDto buscarUsuarioComPedidos(Integer id) {
 
-        // 1. Busca o usuário no banco de dados local (obrigatório)
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Usuário não encontrado com ID: " + id));
 
         List<PedidoDto> pedidos = Collections.emptyList();
 
-        // 2. Chama o microsserviço de Pedidos (Pode falhar, então usamos try-catch)
         try {
-            // Chama a interface Feign para obter a lista de PedidoDto
             ResponseEntity<List<PedidoDto>> response = pedidoFeignClient.buscarPedidosPorUsuario(id);
 
-            // Verifica se a resposta foi bem-sucedida e contém um corpo
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 pedidos = response.getBody();
             }
         } catch (Exception e) {
-            // Se houver qualquer erro de comunicação (conexão, timeout, etc.),
-            // a lista de pedidos permanece vazia e a exceção é logada/tratada.
             System.err.println("Falha ao comunicar com o serviço de pedidos para o usuário " + id + ": " + e.getMessage());
         }
 
-        // 3. Mapeia os dados para o DTO final
         UsuarioComPedidosDto dto = new UsuarioComPedidosDto();
         dto.setId(usuario.getId());
         dto.setNome(usuario.getNome());

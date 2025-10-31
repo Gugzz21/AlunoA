@@ -14,46 +14,43 @@ import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/usuario")
-@CrossOrigin(origins = "*") // ANOTAÇÃO DEVE IR NA CLASSE
+@CrossOrigin(origins = "*")
 public class UsuarioController {
     private final UsuarioService usuarioService;
     public UsuarioController(UsuarioService usuarioService){this.usuarioService=usuarioService;}
 
-    // REQUISITO: Endpoint ConsultarPedidosDosUsuarios
-    @GetMapping("/pedidos") // Novo endpoint consolidado
+
+    @GetMapping("/pedidos")
     public ResponseEntity<List<UsuarioComPedidosDto>> listarUsuariosComPedidos(){
         return ResponseEntity.ok(usuarioService.listarUsuariosComPedidos());
     }
 
-    // Endpoint original (listar todos)
     @GetMapping("/listar")
     public ResponseEntity<List<Usuario>> listarUsuarios(){
         return ResponseEntity.ok(usuarioService.listarTodos());
     }
 
-    // Endpoint listar por ID (retorna apenas o Usuário)
-    // CORREÇÃO: Chamada simplificada, o Service retorna a Entidade Usuario diretamente.
+
     @GetMapping("/buscar/{id}")
     public ResponseEntity<Usuario> listarPorId(@PathVariable("id") Integer id){
         return ResponseEntity.ok(usuarioService.listarPorId(id));
     }
 
-    // Endpoint CadastrarUsuario
-    @PostMapping("/criar") // Ajustei o nome do endpoint para /cadastrar (melhor prática)
+    @PostMapping("/criar")
     public ResponseEntity<UsuarioResponse> cadastrarUsuario(@RequestBody UsuarioRequest usuarioRequest){
         return ResponseEntity.ok(usuarioService.criarUsuario(usuarioRequest));
     }
 
-    @GetMapping("/{id}/pedidos") // Ex: /api/usuario/1/pedidos
+    @GetMapping("/{id}/pedidos")
     public ResponseEntity<?> listarUsuarioComPedidos(@PathVariable Integer id) {
         try {
             UsuarioComPedidosDto usuario = usuarioService.buscarUsuarioComPedidos(id);
             return ResponseEntity.ok(usuario);
         } catch (NoSuchElementException e) {
-            // Retorna 404 Not Found se o usuário não for encontrado no BD local
+
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            // Trata outros erros (ex: erro de sistema)
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro interno ao buscar usuário: " + e.getMessage());
         }
     }
